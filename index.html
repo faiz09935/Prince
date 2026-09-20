@@ -1,0 +1,374 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>FocusDesk – Smart To-Do &amp; Productivity Dashboard</title>
+  <meta name="description" content="FocusDesk is a smart to-do list with priorities, due dates, streaks and a Pomodoro timer. Everything is stored in your browser.">
+  <meta name="color-scheme" content="light dark">
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='9' fill='%230B7A75'/%3E%3Cpath d='M9 16.5l4.5 4.5L23 11' fill='none' stroke='white' stroke-width='3' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E">
+
+  <!-- Applies the saved theme before first paint so the page never flashes the wrong colours. -->
+  <script>
+    (function () {
+      try {
+        var saved = localStorage.getItem('focusdesk.theme');
+        var theme = (saved === 'dark' || saved === 'light')
+          ? saved
+          : (window.matchMedia && matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
+        document.documentElement.setAttribute('data-theme', theme);
+      } catch (e) {
+        document.documentElement.setAttribute('data-theme', 'light');
+      }
+    })();
+  </script>
+
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+  <!-- SVG icon sprite (referenced with <use>) -->
+  <svg class="sprite" aria-hidden="true" focusable="false" width="0" height="0">
+    <defs>
+      <symbol id="i-plus" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></symbol>
+      <symbol id="i-edit" viewBox="0 0 24 24"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4Z"/></symbol>
+      <symbol id="i-trash" viewBox="0 0 24 24"><path d="M3 6h18"/><path d="M8 6V4a1 1 0 0 1 1-1h6a1 1 0 0 1 1 1v2"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6M14 11v6"/></symbol>
+      <symbol id="i-calendar" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/></symbol>
+      <symbol id="i-clock" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></symbol>
+      <symbol id="i-flag" viewBox="0 0 24 24"><path d="M4 15s1-1 4-1 5 2 8 2 4-1 4-1V3s-1 1-4 1-5-2-8-2-4 1-4 1z"/><path d="M4 22v-7"/></symbol>
+      <symbol id="i-sun" viewBox="0 0 24 24"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M4.93 19.07l1.41-1.41M17.66 6.34l1.41-1.41"/></symbol>
+      <symbol id="i-moon" viewBox="0 0 24 24"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></symbol>
+      <symbol id="i-list" viewBox="0 0 24 24"><path d="M8 6h13M8 12h13M8 18h13M3 6h.01M3 12h.01M3 18h.01"/></symbol>
+      <symbol id="i-check-circle" viewBox="0 0 24 24"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><path d="M22 4L12 14.01l-3-3"/></symbol>
+      <symbol id="i-hourglass" viewBox="0 0 24 24"><path d="M5 22h14M5 2h14M17 22v-4.17a2 2 0 0 0-.59-1.41L12 12l-4.41 4.42A2 2 0 0 0 7 17.83V22M7 2v4.17a2 2 0 0 0 .59 1.41L12 12l4.41-4.42A2 2 0 0 0 17 6.17V2"/></symbol>
+      <symbol id="i-activity" viewBox="0 0 24 24"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></symbol>
+      <symbol id="i-search" viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><path d="M21 21l-4.35-4.35"/></symbol>
+      <symbol id="i-x" viewBox="0 0 24 24"><path d="M18 6L6 18M6 6l12 12"/></symbol>
+      <symbol id="i-play" viewBox="0 0 24 24"><path d="M7 4.5v15l12-7.5z" fill="currentColor" stroke="none"/></symbol>
+      <symbol id="i-pause" viewBox="0 0 24 24"><path d="M7 4h3v16H7zM14 4h3v16h-3z" fill="currentColor" stroke="none"/></symbol>
+      <symbol id="i-reset" viewBox="0 0 24 24"><path d="M3 12a9 9 0 1 0 3-6.7L3 8"/><path d="M3 3v5h5"/></symbol>
+      <symbol id="i-bell" viewBox="0 0 24 24"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></symbol>
+      <symbol id="i-check" viewBox="0 0 24 24"><path d="M5 12.5l4.5 4.5L19 7.5"/></symbol>
+      <symbol id="i-info" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 16v-4M12 8h.01"/></symbol>
+    </defs>
+  </svg>
+
+  <a class="skip-link" href="#tasks-heading">Skip to your tasks</a>
+
+  <header class="topbar">
+    <div class="topbar-inner">
+      <a class="brand" href="#top" aria-label="FocusDesk home">
+        <span class="brand-mark" aria-hidden="true">
+          <svg viewBox="0 0 24 24"><use href="#i-check"/></svg>
+        </span>
+        <span class="brand-name">FocusDesk</span>
+      </a>
+
+      <div class="topbar-actions">
+        <button type="button" class="icon-btn" id="theme-toggle" aria-label="Switch to dark mode">
+          <svg class="icon icon-moon" viewBox="0 0 24 24" aria-hidden="true"><use href="#i-moon"/></svg>
+          <svg class="icon icon-sun" viewBox="0 0 24 24" aria-hidden="true"><use href="#i-sun"/></svg>
+        </button>
+        <button type="button" class="btn btn-primary" id="add-task-btn">
+          <svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><use href="#i-plus"/></svg>
+          <span>Add task</span>
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <main class="app" id="top">
+
+    <!-- Greeting -->
+    <section class="hero" aria-labelledby="greeting">
+      <p class="hero-date" id="today-date"></p>
+      <h1 class="hero-title" id="greeting">Good Morning 👋</h1>
+      <p class="hero-summary" id="hero-summary"></p>
+    </section>
+
+    <!-- Statistics -->
+    <section class="stats" aria-label="Task statistics">
+      <article class="stat" data-tone="total">
+        <span class="stat-icon" aria-hidden="true"><svg class="icon" viewBox="0 0 24 24"><use href="#i-list"/></svg></span>
+        <p class="stat-label">Total Tasks</p>
+        <p class="stat-value" id="stat-total">0</p>
+      </article>
+      <article class="stat" data-tone="done">
+        <span class="stat-icon" aria-hidden="true"><svg class="icon" viewBox="0 0 24 24"><use href="#i-check-circle"/></svg></span>
+        <p class="stat-label">Completed</p>
+        <p class="stat-value" id="stat-completed">0</p>
+      </article>
+      <article class="stat" data-tone="pending">
+        <span class="stat-icon" aria-hidden="true"><svg class="icon" viewBox="0 0 24 24"><use href="#i-hourglass"/></svg></span>
+        <p class="stat-label">Pending</p>
+        <p class="stat-value" id="stat-pending">0</p>
+      </article>
+      <article class="stat" data-tone="progress">
+        <span class="stat-icon" aria-hidden="true"><svg class="icon" viewBox="0 0 24 24"><use href="#i-activity"/></svg></span>
+        <p class="stat-label">Progress</p>
+        <p class="stat-value"><span id="stat-progress">0</span><span class="stat-unit">%</span></p>
+      </article>
+    </section>
+
+    <div class="layout">
+
+      <!-- Task list -->
+      <section class="panel tasks-panel" aria-labelledby="tasks-heading">
+        <div class="panel-head">
+          <h2 class="panel-title" id="tasks-heading" tabindex="-1">Your tasks</h2>
+          <p class="panel-count" id="result-count" aria-live="polite"></p>
+        </div>
+
+        <div class="toolbar">
+          <div class="search">
+            <label class="visually-hidden" for="search-input">Search tasks by title or description</label>
+            <svg class="icon search-icon" viewBox="0 0 24 24" aria-hidden="true"><use href="#i-search"/></svg>
+            <input type="search" id="search-input" placeholder="Search title or description" autocomplete="off" spellcheck="false">
+          </div>
+
+          <div class="chips" role="group" aria-label="Filter tasks by status">
+            <button type="button" class="chip" data-filter="all" aria-pressed="true">All <span class="chip-count" data-count="all">0</span></button>
+            <button type="button" class="chip" data-filter="pending" aria-pressed="false">Pending <span class="chip-count" data-count="pending">0</span></button>
+            <button type="button" class="chip" data-filter="completed" aria-pressed="false">Completed <span class="chip-count" data-count="completed">0</span></button>
+            <button type="button" class="chip" data-filter="high" aria-pressed="false">High Priority <span class="chip-count" data-count="high">0</span></button>
+            <button type="button" class="chip" data-filter="today" aria-pressed="false">Today <span class="chip-count" data-count="today">0</span></button>
+          </div>
+
+          <div class="selects">
+            <label class="select-field">
+              <span>Category</span>
+              <select id="category-filter">
+                <option value="all">All</option>
+                <option value="study">Study</option>
+                <option value="work">Work</option>
+                <option value="personal">Personal</option>
+                <option value="other">Other</option>
+              </select>
+            </label>
+            <label class="select-field">
+              <span>Sort by</span>
+              <select id="sort-select">
+                <option value="newest">Newest</option>
+                <option value="oldest">Oldest</option>
+                <option value="due">Due date</option>
+                <option value="priority">Priority</option>
+              </select>
+            </label>
+          </div>
+        </div>
+
+        <ul class="task-list" id="task-list" aria-label="Tasks"></ul>
+
+        <!-- Empty state: no tasks at all -->
+        <div class="empty" id="empty-state" hidden>
+          <svg class="empty-art" viewBox="0 0 160 140" aria-hidden="true">
+            <ellipse cx="80" cy="128" rx="52" ry="6" class="art-shadow"/>
+            <rect x="30" y="16" width="100" height="108" rx="14" class="art-board"/>
+            <rect x="60" y="8" width="40" height="16" rx="6" class="art-clip"/>
+            <circle cx="52" cy="52" r="8" class="art-tick-bg"/>
+            <path d="M48.5 52.5l2.5 2.5 4.5-5" class="art-tick"/>
+            <rect x="68" y="48" width="44" height="8" rx="4" class="art-line"/>
+            <circle cx="52" cy="80" r="8" class="art-ring"/>
+            <rect x="68" y="76" width="34" height="8" rx="4" class="art-line"/>
+            <circle cx="52" cy="108" r="8" class="art-ring"/>
+            <rect x="68" y="104" width="40" height="8" rx="4" class="art-line"/>
+          </svg>
+          <h3 class="empty-title">No tasks yet</h3>
+          <p class="empty-text">Add your first task and get started!</p>
+          <button type="button" class="btn btn-primary" id="empty-add-btn">
+            <svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><use href="#i-plus"/></svg>
+            <span>Add your first task</span>
+          </button>
+        </div>
+
+        <!-- Empty state: filters hide everything -->
+        <div class="empty empty-compact" id="no-results" hidden>
+          <svg class="empty-art empty-art-small" viewBox="0 0 24 24" aria-hidden="true"><use href="#i-search"/></svg>
+          <h3 class="empty-title">No matching tasks</h3>
+          <p class="empty-text">Try a different search or clear your filters.</p>
+          <button type="button" class="btn btn-secondary" id="clear-filters-btn">Clear filters</button>
+        </div>
+      </section>
+
+      <!-- Right rail: progress, streak, timer -->
+      <aside class="rail" aria-label="Productivity tools">
+
+        <div class="rail-today">
+          <!-- Today's progress -->
+          <section class="card progress-card" aria-labelledby="progress-heading">
+            <h2 class="card-title" id="progress-heading">Today's progress</h2>
+            <div class="progress-body">
+              <div class="ring" role="img" id="progress-ring-wrap" aria-label="0% completed today">
+                <svg viewBox="0 0 120 120" aria-hidden="true">
+                  <circle class="ring-track" cx="60" cy="60" r="52"/>
+                  <circle class="ring-value" id="ring-value" cx="60" cy="60" r="52"/>
+                </svg>
+                <div class="ring-label" aria-hidden="true"><span id="ring-percent">0</span><small>%</small></div>
+              </div>
+              <div class="progress-text">
+                <p class="progress-headline"><span id="progress-percent-text">0%</span> Completed</p>
+                <p class="progress-sub" id="progress-sub">No tasks for today yet.</p>
+              </div>
+            </div>
+          </section>
+
+          <!-- Streak -->
+          <section class="card streak-card" aria-labelledby="streak-heading">
+            <h2 class="card-title" id="streak-heading">Productivity streak</h2>
+            <p class="streak-count"><span aria-hidden="true">🔥</span> <span id="streak-days">0</span> <span id="streak-unit">Day Streak</span></p>
+            <p class="streak-note" id="streak-note">Complete a task to start a streak.</p>
+            <ol class="streak-week" id="streak-week" aria-label="Last 7 days"></ol>
+            <p class="streak-best">Best streak: <strong id="streak-best">0</strong> days</p>
+          </section>
+        </div>
+
+        <!-- Pomodoro -->
+        <section class="card pomodoro" id="pomodoro" data-mode="focus" aria-labelledby="pomo-heading">
+          <div class="card-head">
+            <h2 class="card-title" id="pomo-heading">Pomodoro timer</h2>
+            <p class="pomo-sessions" id="pomo-sessions">0 focus sessions today</p>
+          </div>
+
+          <div class="segmented" role="group" aria-label="Timer mode">
+            <button type="button" class="segment" data-mode="focus" aria-pressed="true">Focus</button>
+            <button type="button" class="segment" data-mode="break" aria-pressed="false">Break</button>
+          </div>
+
+          <p class="pomo-time" id="pomo-time" role="timer" aria-label="Time remaining">25:00</p>
+          <p class="pomo-status" id="pomo-status" aria-live="polite">Ready to focus</p>
+          <div class="pomo-bar" aria-hidden="true"><div class="pomo-bar-fill" id="pomo-bar-fill"></div></div>
+
+          <div class="pomo-controls">
+            <button type="button" class="btn btn-primary" id="pomo-start">
+              <svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><use href="#i-play"/></svg><span>Start</span>
+            </button>
+            <button type="button" class="btn btn-secondary" id="pomo-pause" disabled>
+              <svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><use href="#i-pause"/></svg><span>Pause</span>
+            </button>
+            <button type="button" class="btn btn-secondary" id="pomo-reset">
+              <svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><use href="#i-reset"/></svg><span>Reset</span>
+            </button>
+          </div>
+
+          <div class="pomo-alert" id="pomo-alert" role="alert" hidden>
+            <svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><use href="#i-bell"/></svg>
+            <p id="pomo-alert-text"></p>
+            <button type="button" class="icon-btn icon-btn-sm" id="pomo-alert-close" aria-label="Dismiss timer notification">
+              <svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><use href="#i-x"/></svg>
+            </button>
+          </div>
+
+          <details class="pomo-settings">
+            <summary>Timer settings</summary>
+            <div class="pomo-settings-body">
+              <div class="field-row">
+                <div class="field">
+                  <label for="set-focus">Focus (minutes)</label>
+                  <input type="number" id="set-focus" min="1" max="120" step="1" inputmode="numeric">
+                </div>
+                <div class="field">
+                  <label for="set-break">Break (minutes)</label>
+                  <input type="number" id="set-break" min="1" max="60" step="1" inputmode="numeric">
+                </div>
+              </div>
+              <p class="field-error" id="set-error" role="alert" hidden></p>
+              <label class="check-row"><input type="checkbox" id="set-notify"> <span>Show a browser notification when time is up</span></label>
+              <label class="check-row"><input type="checkbox" id="set-sound"> <span>Play a short sound when time is up</span></label>
+            </div>
+          </details>
+        </section>
+      </aside>
+    </div>
+  </main>
+
+  <footer class="footer">
+    <p>Your tasks are saved in this browser only. Nothing is sent to a server.</p>
+  </footer>
+
+  <!-- Floating add button for small screens -->
+  <button type="button" class="fab" id="fab-add" aria-label="Add task">
+    <svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><use href="#i-plus"/></svg>
+  </button>
+
+  <!-- Add / Edit task dialog -->
+  <dialog class="dialog" id="task-dialog" aria-labelledby="task-dialog-title">
+    <form class="dialog-body" id="task-form" novalidate>
+      <div class="dialog-head">
+        <h2 id="task-dialog-title">Add a task</h2>
+        <button type="button" class="icon-btn" data-close aria-label="Close dialog">
+          <svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><use href="#i-x"/></svg>
+        </button>
+      </div>
+
+      <div class="field">
+        <label for="task-title">Title <span class="req" aria-hidden="true">*</span></label>
+        <input type="text" id="task-title" maxlength="80" required autocomplete="off" placeholder="What needs to get done?" aria-describedby="err-title">
+        <p class="field-error" id="err-title" hidden></p>
+      </div>
+
+      <div class="field">
+        <label for="task-desc">Description</label>
+        <textarea id="task-desc" rows="3" maxlength="300" placeholder="Add details (optional)" aria-describedby="err-desc"></textarea>
+        <p class="field-error" id="err-desc" hidden></p>
+      </div>
+
+      <div class="field-row">
+        <div class="field">
+          <label for="task-date">Due date</label>
+          <input type="date" id="task-date" aria-describedby="err-date">
+          <p class="field-error" id="err-date" hidden></p>
+        </div>
+        <div class="field">
+          <label for="task-time">Due time</label>
+          <input type="time" id="task-time" aria-describedby="err-time">
+          <p class="field-error" id="err-time" hidden></p>
+        </div>
+      </div>
+      <p class="field-hint" id="hint-due" role="status" hidden></p>
+      <button type="button" class="link-btn" id="clear-due">Clear due date and time</button>
+
+      <div class="field-row field-row-priority">
+        <div class="field" role="radiogroup" aria-labelledby="priority-label">
+          <span class="field-label" id="priority-label">Priority</span>
+          <div class="radio-group">
+            <label class="radio"><input type="radio" name="priority" value="low"><span>Low</span></label>
+            <label class="radio"><input type="radio" name="priority" value="medium" checked><span>Medium</span></label>
+            <label class="radio"><input type="radio" name="priority" value="high"><span>High</span></label>
+          </div>
+        </div>
+        <div class="field">
+          <label for="task-category">Category</label>
+          <select id="task-category">
+            <option value="study">Study</option>
+            <option value="work">Work</option>
+            <option value="personal">Personal</option>
+            <option value="other" selected>Other</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="dialog-actions">
+        <button type="button" class="btn btn-secondary" data-close>Cancel</button>
+        <button type="submit" class="btn btn-primary" id="task-submit">Add task</button>
+      </div>
+    </form>
+  </dialog>
+
+  <!-- Delete confirmation dialog -->
+  <dialog class="dialog dialog-small" id="confirm-dialog" aria-labelledby="confirm-title" aria-describedby="confirm-text">
+    <div class="dialog-body">
+      <h2 id="confirm-title">Delete this task?</h2>
+      <p id="confirm-text" class="confirm-text"></p>
+      <div class="dialog-actions">
+        <button type="button" class="btn btn-secondary" id="confirm-cancel">Keep task</button>
+        <button type="button" class="btn btn-danger" id="confirm-delete">Delete task</button>
+      </div>
+    </div>
+  </dialog>
+
+  <!-- Toasts -->
+  <div class="toast-region" id="toast-region" role="status" aria-live="polite"></div>
+
+  <script src="script.js"></script>
+</body>
+</html>
